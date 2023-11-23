@@ -1,0 +1,78 @@
+﻿@inject HttpClient HttpClient
+
+@{
+    ViewData["Title"] = "All Contacts";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="d-flex flex-column">
+                @{
+                    var allContacts = await HttpClient.GetFromJsonAsync<List<Lesson_33_MVC.DTO.GetContactDto>>("/api/contacts");
+                    if (allContacts?.Count == 0)
+                    {
+                        <h1 class="text-center">You have no contacts yet :(</h1>
+                    }
+                    else
+                    {
+                        <h1 class="text-center">All Contacts</h1>
+
+                        foreach (var contact in allContacts)
+                        {
+                            <div id="contact-@contact.Id" class="card mb-3">
+                                <div class="row g-0">
+                                    <div class="col-md-2">
+                                        <img src="@($"/api/contacts/{contact.Id}/avatar")" width="120" height="120" class="img-fluid m-2" alt="Contact Avatar">
+                                    </div>
+                                    <div class="col-md-8 justify-content-center">
+                                        <div class="card-body">
+                                            <h5 class="card-title">@($"{contact.FirstName} {contact.LastName}")</h5>
+                                            <p class="card-text">@($"Phone: {contact.Phone}")</p>
+                                            <p class="card-text">@($"Address: {contact.Address}")</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 d-flex justify-content-end align-self-center pe-4">
+                                        <a href="#" class="btn btn-primary me-2 d-flex flex-row" role="button" onclick="editContact('@contact.Id')">
+                                            <img src="/images/icon-edit.png" class="me-2" />
+                                            Edit
+                                        </a>
+                                        <button class="btn btn-danger d-flex flex-row" role="button" onclick="confirmDelete('@contact.Id')">
+                                            <img src="/images/icon-delete.png" class="me-2" />
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function editContact(contactId) {
+        window.location.href = `/EditContact?id=${contactId}`;
+    }
+
+    function confirmDelete(contactId) {
+        if (confirm('Are you sure you want to delete this contact?')) {
+            fetch(`/api/contacts/${contactId}`, { method: 'DELETE' })
+                .then(response => {
+                    if (response.ok) {
+                        const contactCard = document.getElementById(`contact-${contactId}`);
+                        if (contactCard) {
+                            contactCard.remove();
+                        }
+                    } else {
+                        console.error('Error deleting contact:', response.statusText);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting contact:', error);
+                });
+        }
+    }
+</script>
